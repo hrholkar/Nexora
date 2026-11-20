@@ -1,0 +1,44 @@
+services:
+  # -------------------------------------------------------------
+  # BACKEND SERVICE (Render Free Web Service)
+  # Lightweight FastAPI server handling metadata, datasets & routing
+  # Does not load heavy model weights into memory on free tier
+  # -------------------------------------------------------------
+  - type: web
+    name: nexora-backend
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: ML_ENGINE_ENABLED
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: DATABASE_URL
+        value: sqlite:///./nexora.db
+
+  # -------------------------------------------------------------
+  # FRONTEND SERVICE (Render Free Static Site)
+  # React + Vite Single Page Application
+  # -------------------------------------------------------------
+  - type: static
+    name: nexora-frontend
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: nexora-backend
+          property: host

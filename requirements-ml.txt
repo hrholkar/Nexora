@@ -1,0 +1,11 @@
+# NEXORA - Local ML Engine Dependencies
+# Requires PyTorch CPU (or CUDA if available)
+-r requirements.txt
+transformers>=4.40.0
+peft>=0.10.0
+datasets>=2.18.0
+accelerate>=0.29.0
+scikit-learn>=1.4.0
+evaluate>=0.4.1
+rouge-score>=0.1.2
+sacrebleu>=2.4.0
