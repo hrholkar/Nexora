@@ -15,7 +15,22 @@ import {
   HealthStatus
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const resolveApiBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) {
+    return '/api';
+  }
+  // Render's property: host gives 'nexora-backend.onrender.com' without protocol
+  const withProtocol = envUrl.startsWith('http://') || envUrl.startsWith('https://')
+    ? envUrl
+    : `https://${envUrl}`;
+  // Ensure the /api suffix is present since backend routes are mounted under /api
+  return withProtocol.endsWith('/api')
+    ? withProtocol
+    : `${withProtocol.replace(/\/$/, '')}/api`;
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

@@ -1,4 +1,4 @@
-﻿# NEXORA — Windows PowerShell One-Click Launcher
+# NEXORA — Windows PowerShell One-Click Launcher
 # Runs the local lightweight FastAPI backend and the Vite frontend simultaneously
 
 Write-Host "==========================================================" -ForegroundColor Cyan
