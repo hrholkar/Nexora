@@ -1,10 +1,18 @@
 import os
 import gc
 import logging
-import torch
 from typing import Dict, Any, Optional, List
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from backend.app.config import settings
+
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    ML_AVAILABLE = True
+except ImportError:
+    torch = None
+    AutoTokenizer = None
+    AutoModelForCausalLM = None
+    ML_AVAILABLE = False
 
 logger = logging.getLogger("nexora.ml.hub")
 
@@ -93,6 +101,8 @@ def get_all_models_catalog() -> List[Dict[str, Any]]:
     return catalog
 
 def download_model(repo_or_name: str) -> Dict[str, Any]:
+    if not ML_AVAILABLE:
+        raise RuntimeError("Machine learning libraries (torch, transformers) are not installed in this environment.")
     # Match by key or name
     target_repo = repo_or_name
     for repo, meta in CURATED_MODELS.items():
@@ -118,6 +128,8 @@ def download_model(repo_or_name: str) -> Dict[str, Any]:
     }
 
 def load_model_into_memory(repo_or_name: str) -> Dict[str, Any]:
+    if not ML_AVAILABLE:
+        raise RuntimeError("Machine learning libraries (torch, transformers) are not installed in this environment.")
     global ACTIVE_MODEL_CONTAINER
     target_repo = repo_or_name
     for repo, meta in CURATED_MODELS.items():
@@ -166,7 +178,7 @@ def unload_active_model() -> Dict[str, Any]:
     ACTIVE_MODEL_CONTAINER["model_name"] = None
     
     gc.collect()
-    if torch.cuda.is_available():
+    if torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available():
         torch.cuda.empty_cache()
         
     return {"status": "unloaded", "previous_model": old_name}

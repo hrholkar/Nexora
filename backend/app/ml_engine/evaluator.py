@@ -1,8 +1,14 @@
 import os
 import json
 import math
-import torch
 from typing import Dict, Any, List, Optional
+
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    TORCH_AVAILABLE = False
 from backend.app.ml_engine.inference import run_inference
 from backend.app.ml_engine.model_hub import ACTIVE_MODEL_CONTAINER, load_model_into_memory
 

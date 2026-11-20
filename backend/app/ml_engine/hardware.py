@@ -1,6 +1,12 @@
 import psutil
-import torch
 from typing import Dict, Any
+
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    TORCH_AVAILABLE = False
 
 def get_hardware_info() -> Dict[str, Any]:
     """Detects CPU, RAM, and optional CUDA availability on the host machine."""
@@ -11,7 +17,7 @@ def get_hardware_info() -> Dict[str, Any]:
     cpu_cores = psutil.cpu_count(logical=False) or psutil.cpu_count(logical=True)
     cpu_logical = psutil.cpu_count(logical=True)
     
-    cuda_available = torch.cuda.is_available()
+    cuda_available = torch.cuda.is_available() if (TORCH_AVAILABLE and torch is not None) else False
     cuda_device_name = torch.cuda.get_device_name(0) if cuda_available else None
     cuda_vram_gb = round(torch.cuda.get_device_properties(0).total_memory / (1024 ** 3), 2) if cuda_available else 0.0
 

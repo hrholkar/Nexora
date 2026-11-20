@@ -1,10 +1,21 @@
 import os
 import time
 import threading
-import torch
 from typing import Optional, List, Dict, Any, Generator
-from transformers import TextIteratorStreamer, AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel
+
+try:
+    import torch
+    from transformers import TextIteratorStreamer, AutoModelForCausalLM, AutoTokenizer
+    from peft import PeftModel
+    ML_INFERENCE_AVAILABLE = True
+except ImportError:
+    torch = None
+    TextIteratorStreamer = None
+    AutoModelForCausalLM = None
+    AutoTokenizer = None
+    PeftModel = None
+    ML_INFERENCE_AVAILABLE = False
+
 from backend.app.ml_engine.model_hub import ACTIVE_MODEL_CONTAINER, load_model_into_memory, get_model_path, is_model_downloaded
 from backend.app.ml_engine.tokenizer_util import format_prompt
 
@@ -21,6 +32,8 @@ def run_inference(
     repetition_penalty: float = 1.1
 ) -> Dict[str, Any]:
     """Performs genuine model inference on CPU or CUDA, with optional LoRA adapter."""
+    if not ML_INFERENCE_AVAILABLE:
+        raise RuntimeError("Machine learning libraries (torch, transformers, peft) are not installed in this environment.")
     # Ensure base model is loaded
     if ACTIVE_MODEL_CONTAINER["model"] is None or ACTIVE_MODEL_CONTAINER["model_name"] != model_name:
         load_model_into_memory(model_name)
@@ -101,6 +114,8 @@ def stream_inference(
     repetition_penalty: float = 1.1
 ) -> Generator[str, None, None]:
     """Streams generated tokens using TextIteratorStreamer."""
+    if not ML_INFERENCE_AVAILABLE:
+        raise RuntimeError("Machine learning libraries (torch, transformers, peft) are not installed in this environment.")
     if ACTIVE_MODEL_CONTAINER["model"] is None or ACTIVE_MODEL_CONTAINER["model_name"] != model_name:
         load_model_into_memory(model_name)
 

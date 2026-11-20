@@ -1,5 +1,9 @@
 from typing import List, Dict, Any, Optional
-from transformers import PreTrainedTokenizer
+
+try:
+    from transformers import PreTrainedTokenizer
+except ImportError:
+    PreTrainedTokenizer = Any
 
 def format_prompt(
     tokenizer: PreTrainedTokenizer,

@@ -6,11 +6,26 @@ import logging
 import threading
 import datetime
 import psutil
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torch.optim import AdamW
-from transformers import AutoModelForCausalLM, AutoTokenizer, get_linear_schedule_with_warmup
-from peft import LoraConfig, get_peft_model, TaskType
+
+try:
+    import torch
+    from torch.utils.data import Dataset, DataLoader
+    from torch.optim import AdamW
+    from transformers import AutoModelForCausalLM, AutoTokenizer, get_linear_schedule_with_warmup
+    from peft import LoraConfig, get_peft_model, TaskType
+    ML_TRAINER_AVAILABLE = True
+except ImportError:
+    torch = None
+    Dataset = object
+    DataLoader = None
+    AdamW = None
+    AutoModelForCausalLM = None
+    AutoTokenizer = None
+    get_linear_schedule_with_warmup = None
+    LoraConfig = None
+    get_peft_model = None
+    TaskType = None
+    ML_TRAINER_AVAILABLE = False
 from backend.app.config import settings
 from backend.app.database import SessionLocal
 from backend.app.models.schema import ExperimentModel
@@ -109,6 +124,8 @@ def run_fine_tuning(
     seed: int = 42
 ):
     """Executes genuine LoRA fine-tuning on CPU (or CUDA if present) in background thread."""
+    if not ML_TRAINER_AVAILABLE:
+        raise RuntimeError("Fine-tuning requires PyTorch, Transformers, and PEFT libraries.")
     torch.manual_seed(seed)
     db = SessionLocal()
     experiment = db.query(ExperimentModel).filter(ExperimentModel.id == experiment_id).first()
